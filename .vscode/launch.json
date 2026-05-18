@@ -10,8 +10,8 @@
         {
             "type": "msedge",
             "request": "launch",
-            "name": "Abrir ImobiHub PHP (Dashboard)",
-            "url": "http://localhost:8000/dashboard.php",
+            "name": "Abrir ImobiHub (Dashboard)",
+            "url": "http://localhost:8000/dashboard.html",
             "webRoot": "${workspaceFolder}/php-app/public",
             "preLaunchTask": "PHP Dev Server"
         }
