@@ -14,6 +14,34 @@ const PROPERTY_TYPE_LABELS = {
     terreno: 'Terreno',
 };
 
+function formatWhatsApp(value) {
+    const digits = String(value ?? '').replace(/\D+/g, '').slice(0, 13);
+    const hasCountry = digits.startsWith('55') && digits.length > 11;
+    const local = hasCountry ? digits.slice(2) : digits;
+
+    const ddd = local.slice(0, 2);
+    const rest = local.slice(2);
+    const first = rest.length > 8 ? rest.slice(0, 5) : rest.slice(0, 4);
+    const last = rest.length > 8 ? rest.slice(5, 9) : rest.slice(4, 8);
+
+    let out = hasCountry ? '+55 ' : '';
+    if (ddd) out += `(${ddd}`;
+    if (ddd.length === 2) out += ') ';
+    if (first) out += first;
+    if (last) out += `-${last}`;
+    return out.trim();
+}
+
+function bindWhatsAppMask(input) {
+    if (!input || input.dataset.masked === '1') return;
+
+    input.value = formatWhatsApp(input.value);
+    input.dataset.masked = '1';
+    input.addEventListener('input', () => {
+        input.value = formatWhatsApp(input.value);
+    });
+}
+
 // ---------------------------------------------------------------------------
 // Notices
 // ---------------------------------------------------------------------------
@@ -118,6 +146,7 @@ function buildPropertyItem(item) {
         const el = editForm.elements[field];
         if (el) el.value = field === 'price' ? Math.round(item.price) : (item[field] ?? '');
     }
+    bindWhatsAppMask(editForm.elements.owner_whatsapp);
     editForm.addEventListener('submit', async e => {
         e.preventDefault();
         const data = Object.fromEntries(new FormData(editForm));
@@ -194,6 +223,7 @@ async function reload() {
 // ---------------------------------------------------------------------------
 
 const createForm = document.getElementById('create-form');
+bindWhatsAppMask(createForm.elements.owner_whatsapp);
 createForm.addEventListener('submit', async e => {
     e.preventDefault();
     try {
