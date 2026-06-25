@@ -65,6 +65,24 @@ $iconMap = [
         root.style.setProperty('--logo-bg', logoBg);
       } catch (e) {}
     })();
+
+    document.addEventListener('DOMContentLoaded', function () {
+      try {
+        var logo = localStorage.getItem('imobihub_logo_v1');
+        if (!/^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(logo || '')) return;
+
+        document.querySelectorAll('.brand svg, .auth-logo svg').forEach(function (svg) {
+          var img = document.createElement('img');
+          img.src = logo;
+          img.alt = 'ImobiHub';
+          if (svg.hasAttribute('class')) img.setAttribute('class', svg.getAttribute('class'));
+          if (svg.hasAttribute('width')) img.setAttribute('width', svg.getAttribute('width'));
+          if (svg.hasAttribute('height')) img.setAttribute('height', svg.getAttribute('height'));
+          img.style.objectFit = 'contain';
+          svg.parentNode.replaceChild(img, svg);
+        });
+      } catch (e) {}
+    });
   </script>
   <link rel="stylesheet" href="/assets/styles.css">
   <?= $extraHead ?>

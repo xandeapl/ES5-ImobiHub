@@ -100,6 +100,9 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="file" id="logo-input" accept="image/*" onchange="previewLogo(this)">
           </div>
         </label>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-outline-muted btn-sm" onclick="resetLogoDefault()">Voltar logo padrao</button>
+        </div>
       </div>
 
       <div class="admin-form-card panel">
@@ -211,6 +214,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <script>
   const THEME_STORAGE_KEY = 'imobihub_theme_v1';
+  const LOGO_STORAGE_KEY = 'imobihub_logo_v1';
   const DEFAULT_THEME = {
     brand: '#1B4FBB',
     dark: '#0D2B69',
@@ -307,6 +311,45 @@ require_once __DIR__ . '/../includes/header.php';
     });
   }
 
+  function isDataImage(value) {
+    return /^data:image\/[a-zA-Z0-9.+-]+;base64,/.test(value || '');
+  }
+
+  function renderLogoPreview(src) {
+    const preview = document.getElementById('logo-preview');
+    preview.innerHTML = '<img src="' + src + '" alt="Logo" style="max-height:80px;border-radius:8px">';
+  }
+
+  function bootLogo() {
+    try {
+      const savedLogo = localStorage.getItem(LOGO_STORAGE_KEY);
+      if (isDataImage(savedLogo)) {
+        renderLogoPreview(savedLogo);
+      }
+    } catch {}
+  }
+
+  function persistPreviewLogo() {
+    const img = document.querySelector('#logo-preview img');
+    const src = img ? img.getAttribute('src') : '';
+    if (!isDataImage(src)) return;
+    localStorage.setItem(LOGO_STORAGE_KEY, src);
+  }
+
+  function resetLogoDefault() {
+    localStorage.removeItem(LOGO_STORAGE_KEY);
+    document.getElementById('logo-preview').innerHTML =
+      '<svg width="36" height="36" viewBox="0 0 36 36" fill="none">'
+      + '<rect width="36" height="36" rx="8" fill="var(--logo-bg, #EBF1FF)"/>'
+      + '<path d="M18 8L6 18h4v10h6v-6h4v6h6V18h4L18 8Z" fill="var(--brand, #1B4FBB)"/>'
+      + '</svg>';
+
+    const btn = document.getElementById('save-btn');
+    if (!btn) return;
+    btn.textContent = 'Logo padrao aplicada';
+    setTimeout(() => { btn.textContent = 'Salvar alteracoes'; }, 1400);
+  }
+
   function resetThemeDefaults() {
     localStorage.removeItem(THEME_STORAGE_KEY);
     writeThemeToInputs(DEFAULT_THEME);
@@ -327,10 +370,12 @@ require_once __DIR__ . '/../includes/header.php';
 
   function previewLogo(input) {
     if (!input.files || !input.files[0]) return;
+    if (!(input.files[0].type || '').startsWith('image/')) return;
     const reader = new FileReader();
     reader.onload = e => {
-      document.getElementById('logo-preview').innerHTML =
-        '<img src="' + e.target.result + '" alt="Logo" style="max-height:80px;border-radius:8px">';
+      const result = String(e.target.result || '');
+      if (!isDataImage(result)) return;
+      renderLogoPreview(result);
     };
     reader.readAsDataURL(input.files[0]);
   }
@@ -343,6 +388,7 @@ require_once __DIR__ . '/../includes/header.php';
     const theme = readThemeFromInputs();
     applyTheme(theme);
     localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(theme));
+    persistPreviewLogo();
 
     setTimeout(() => {
       btn.textContent = 'Salvo!';
@@ -350,7 +396,10 @@ require_once __DIR__ . '/../includes/header.php';
     }, 800);
   }
 
-  document.addEventListener('DOMContentLoaded', bootTheme);
+  document.addEventListener('DOMContentLoaded', () => {
+    bootTheme();
+    bootLogo();
+  });
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
