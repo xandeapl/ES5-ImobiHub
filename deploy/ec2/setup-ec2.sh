@@ -87,11 +87,10 @@ if [ -z "$PHP_FPM_SOCK" ]; then
   echo "Nao encontrei socket do php-fpm em /run/php/."
   exit 1
 fi
-PHP_FPM_SOCK_BASENAME="$(basename "$PHP_FPM_SOCK")"
 if [ -f /etc/nginx/conf.d/imobihub.conf ]; then
-  sudo sed -i "s#php8.3-fpm.sock#$PHP_FPM_SOCK_BASENAME#g" /etc/nginx/conf.d/imobihub.conf
+  sudo sed -i "s#__PHP_FPM_SOCK__#$PHP_FPM_SOCK#g" /etc/nginx/conf.d/imobihub.conf
 else
-  sudo sed -i "s#php8.3-fpm.sock#$PHP_FPM_SOCK_BASENAME#g" /etc/nginx/sites-available/imobihub
+  sudo sed -i "s#__PHP_FPM_SOCK__#$PHP_FPM_SOCK#g" /etc/nginx/sites-available/imobihub
 fi
 
 echo "[7/8] Validando e reiniciando servicos..."
