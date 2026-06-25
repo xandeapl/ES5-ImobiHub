@@ -55,7 +55,9 @@ sudo rsync -av --delete \
 echo "[4/8] Ajustando permissoes de escrita..."
 sudo mkdir -p "$APP_DIR/php-app/data" "$APP_DIR/php-app/public/uploads"
 WEB_USER="www-data"
-if id nginx >/dev/null 2>&1; then
+if id apache >/dev/null 2>&1; then
+  WEB_USER="apache"
+elif id nginx >/dev/null 2>&1; then
   WEB_USER="nginx"
 fi
 sudo chown -R "$WEB_USER:$WEB_USER" "$APP_DIR/php-app/data" "$APP_DIR/php-app/public/uploads"
