@@ -207,6 +207,96 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+  const THEME_STORAGE_KEY = 'imobihub_theme_v1';
+
+  function getThemeInputs() {
+    return {
+      brand: document.getElementById('color-brand'),
+      dark: document.getElementById('color-dark'),
+      bg: document.getElementById('color-bg'),
+      text: document.getElementById('color-text')
+    };
+  }
+
+  function safeHex(color, fallback) {
+    return /^#[0-9a-fA-F]{6}$/.test(color || '') ? color : fallback;
+  }
+
+  function hexToRgb(hex) {
+    const normalized = safeHex(hex, '#000000').slice(1);
+    return {
+      r: parseInt(normalized.slice(0, 2), 16),
+      g: parseInt(normalized.slice(2, 4), 16),
+      b: parseInt(normalized.slice(4, 6), 16)
+    };
+  }
+
+  function rgbToHex(r, g, b) {
+    const toHex = (n) => n.toString(16).padStart(2, '0');
+    return '#' + toHex(r) + toHex(g) + toHex(b);
+  }
+
+  function shiftHex(hex, delta) {
+    const { r, g, b } = hexToRgb(hex);
+    const clamp = (n) => Math.max(0, Math.min(255, n));
+    return rgbToHex(clamp(r + delta), clamp(g + delta), clamp(b + delta));
+  }
+
+  function applyTheme(theme) {
+    const root = document.documentElement;
+    const brand = safeHex(theme.brand, '#1B4FBB');
+    const dark = safeHex(theme.dark, '#0D2B69');
+    const bg = safeHex(theme.bg, '#EEF2F8');
+    const text = safeHex(theme.text, '#0F2557');
+
+    root.style.setProperty('--brand', brand);
+    root.style.setProperty('--brand-dark', dark);
+    root.style.setProperty('--brand-hover', shiftHex(brand, -18));
+    root.style.setProperty('--bg', bg);
+    root.style.setProperty('--text', text);
+  }
+
+  function loadTheme() {
+    try {
+      const raw = localStorage.getItem(THEME_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function readThemeFromInputs() {
+    const inputs = getThemeInputs();
+    return {
+      brand: inputs.brand.value,
+      dark: inputs.dark.value,
+      bg: inputs.bg.value,
+      text: inputs.text.value
+    };
+  }
+
+  function writeThemeToInputs(theme) {
+    const inputs = getThemeInputs();
+    inputs.brand.value = safeHex(theme.brand, '#1B4FBB');
+    inputs.dark.value = safeHex(theme.dark, '#0D2B69');
+    inputs.bg.value = safeHex(theme.bg, '#EEF2F8');
+    inputs.text.value = safeHex(theme.text, '#0F2557');
+  }
+
+  function bootTheme() {
+    const savedTheme = loadTheme();
+    if (savedTheme) {
+      writeThemeToInputs(savedTheme);
+      applyTheme(savedTheme);
+    }
+
+    Object.values(getThemeInputs()).forEach((input) => {
+      input.addEventListener('input', () => applyTheme(readThemeFromInputs()));
+    });
+  }
+
   function showSection(id, btn) {
     document.querySelectorAll('.admin-section').forEach(s => s.hidden = true);
     document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
@@ -228,11 +318,18 @@ require_once __DIR__ . '/../includes/header.php';
     const btn = document.getElementById('save-btn');
     btn.textContent = 'Salvando...';
     btn.disabled = true;
+
+    const theme = readThemeFromInputs();
+    applyTheme(theme);
+    localStorage.setItem(THEME_STORAGE_KEY, JSON.stringify(theme));
+
     setTimeout(() => {
       btn.textContent = 'Salvo!';
       setTimeout(() => { btn.textContent = 'Salvar alterações'; btn.disabled = false; }, 1500);
     }, 800);
   }
+
+  document.addEventListener('DOMContentLoaded', bootTheme);
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
