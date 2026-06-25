@@ -15,7 +15,26 @@ echo "[1/8] Instalando pacotes..."
 if command -v dnf >/dev/null 2>&1; then
   PKG_MGR="dnf"
   sudo dnf update -y
-  sudo dnf install -y nginx php-fpm php-cli php-pdo php-sqlite3 php-pdo_sqlite rsync unzip
+  PHP_BASE_PKGS=(nginx php-fpm php-cli rsync unzip)
+  PHP_SQLITE_PKGS=()
+
+  while IFS= read -r pkg; do
+    [ -n "$pkg" ] && PHP_SQLITE_PKGS+=("$pkg")
+  done < <(dnf list available 2>/dev/null | awk '/^php([0-9.]+)?-(pdo_sqlite|sqlite3)\./ {print $1}')
+
+  if [ ${#PHP_SQLITE_PKGS[@]} -eq 0 ]; then
+    while IFS= read -r pkg; do
+      [ -n "$pkg" ] && PHP_SQLITE_PKGS+=("$pkg")
+    done < <(dnf list available 2>/dev/null | awk '/^php-(pdo_sqlite|sqlite3)\./ {print $1}')
+  fi
+
+  if [ ${#PHP_SQLITE_PKGS[@]} -eq 0 ]; then
+    echo "Nao foi possivel localizar pacotes PHP SQLite via dnf."
+    echo "Execute: dnf list available | grep -Ei 'php.*(sqlite|pdo_sqlite)'"
+    exit 1
+  fi
+
+  sudo dnf install -y "${PHP_BASE_PKGS[@]}" "${PHP_SQLITE_PKGS[@]}"
 else
   PKG_MGR="apt"
   sudo apt update
@@ -83,6 +102,10 @@ fi
 sudo systemctl enable nginx "$PHP_FPM_SERVICE"
 sudo systemctl restart "$PHP_FPM_SERVICE"
 sudo systemctl restart nginx
+
+if ! php -m 2>/dev/null | grep -Eqi '^(pdo_sqlite|sqlite3)$'; then
+  echo "SQLite/PDO nao apareceu no php -m. Verifique o service do PHP-FPM e os pacotes instalados."
+fi
 
 echo "[8/8] Liberando firewall (se UFW estiver ativo)..."
 if sudo ufw status | grep -qi active; then
