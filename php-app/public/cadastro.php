@@ -3,34 +3,44 @@
  * cadastro.php — Criação de conta de administrador
  */
 require_once __DIR__ . '/includes/auth.php';
-require_once __DIR__ . '/../backend/bootstrap.php';
+
+$bootstrapError = null;
+try {
+  require_once __DIR__ . '/../backend/bootstrap.php';
+} catch (Throwable $exception) {
+  $bootstrapError = $exception->getMessage();
+}
 
 redirectIfAuthenticated('/dashboard.php');
 
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $name = trim((string) ($_POST['name'] ?? ''));
-  $email = strtolower(trim((string) ($_POST['email'] ?? '')));
-  $password = (string) ($_POST['password'] ?? '');
-  $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
-
-  if ($name === '' || $email === '' || $password === '' || $passwordConfirm === '') {
-    $error = 'Preencha todos os campos obrigatórios.';
-  } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $error = 'Informe um e-mail válido.';
-  } elseif (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/\d/', $password)) {
-    $error = 'A senha deve ter ao menos 8 caracteres, uma letra maiúscula e um número.';
-  } elseif ($password !== $passwordConfirm) {
-    $error = 'As senhas não coincidem.';
-  } elseif ($adminRepository->findByEmail($email) !== null) {
-    $error = 'Já existe uma conta para este e-mail.';
+  if ($bootstrapError !== null) {
+    $error = 'O servidor PHP nao conseguiu iniciar o banco de dados. Verifique as extensoes SQLite no php-fpm.';
   } else {
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $adminRepository->create($name, $email, $hash);
+    $name = trim((string) ($_POST['name'] ?? ''));
+    $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+    $password = (string) ($_POST['password'] ?? '');
+    $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
 
-    header('Location: /login.php?success=' . urlencode('Conta criada com sucesso. Faça login para continuar.'));
-    exit;
+    if ($name === '' || $email === '' || $password === '' || $passwordConfirm === '') {
+      $error = 'Preencha todos os campos obrigatórios.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $error = 'Informe um e-mail válido.';
+    } elseif (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/\d/', $password)) {
+      $error = 'A senha deve ter ao menos 8 caracteres, uma letra maiúscula e um número.';
+    } elseif ($password !== $passwordConfirm) {
+      $error = 'As senhas não coincidem.';
+    } elseif ($adminRepository->findByEmail($email) !== null) {
+      $error = 'Já existe uma conta para este e-mail.';
+    } else {
+      $hash = password_hash($password, PASSWORD_DEFAULT);
+      $adminRepository->create($name, $email, $hash);
+
+      header('Location: /login.php?success=' . urlencode('Conta criada com sucesso. Faça login para continuar.'));
+      exit;
+    }
   }
 }
 
@@ -49,6 +59,10 @@ require_once __DIR__ . '/includes/auth_header.php';
   </div>
   <h1 class="auth-heading">Criar conta de administrador</h1>
   <p class="auth-sub">Preencha os dados para criar sua conta de gerenciamento.</p>
+
+  <?php if ($bootstrapError !== null): ?>
+    <div class="auth-alert auth-alert-error">Banco de dados indisponivel no servidor. PHP-FPM precisa carregar sqlite/pdo_sqlite.</div>
+  <?php endif; ?>
 
   <?php if ($error !== ''): ?>
     <div class="auth-alert auth-alert-error"><?= htmlspecialchars($error) ?></div>

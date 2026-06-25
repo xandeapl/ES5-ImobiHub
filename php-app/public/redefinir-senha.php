@@ -3,7 +3,13 @@
  * redefinir-senha.php — Redefinição de senha com checklist de requisitos
  */
 require_once __DIR__ . '/includes/auth.php';
-require_once __DIR__ . '/../backend/bootstrap.php';
+
+$bootstrapError = null;
+try {
+  require_once __DIR__ . '/../backend/bootstrap.php';
+} catch (Throwable $exception) {
+  $bootstrapError = $exception->getMessage();
+}
 
 redirectIfAuthenticated('/dashboard.php');
 
@@ -16,6 +22,9 @@ if ($token === '') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token !== '') {
+  if ($bootstrapError !== null) {
+    $error = 'O servidor PHP nao conseguiu iniciar o banco de dados. Verifique as extensoes SQLite no php-fpm.';
+  } else {
   $password = (string) ($_POST['password'] ?? '');
   $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
 
@@ -36,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $token !== '') {
       $success = true;
     }
   }
+  }
 }
 
 $pageTitle = 'ImobiHub — Redefinir Senha';
@@ -51,6 +61,10 @@ require_once __DIR__ . '/includes/auth_header.php';
   </div>
   <h1 class="auth-heading">Redefinir senha</h1>
   <p class="auth-sub">Crie uma nova senha segura para sua conta de administrador.</p>
+
+  <?php if ($bootstrapError !== null): ?>
+    <div class="auth-alert auth-alert-error">Banco de dados indisponivel no servidor. PHP-FPM precisa carregar sqlite/pdo_sqlite.</div>
+  <?php endif; ?>
 
   <?php if ($error !== ''): ?>
     <div class="auth-alert auth-alert-error"><?= htmlspecialchars($error) ?></div>

@@ -3,7 +3,13 @@
  * login.php — Página de login do administrador
  */
 require_once __DIR__ . '/includes/auth.php';
-require_once __DIR__ . '/../backend/bootstrap.php';
+
+$bootstrapError = null;
+try {
+  require_once __DIR__ . '/../backend/bootstrap.php';
+} catch (Throwable $exception) {
+  $bootstrapError = $exception->getMessage();
+}
 
 redirectIfAuthenticated('/dashboard.php');
 
@@ -11,6 +17,9 @@ $error = trim((string) ($_GET['error'] ?? ''));
 $success = trim((string) ($_GET['success'] ?? ''));
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if ($bootstrapError !== null) {
+    $error = 'O servidor PHP nao conseguiu iniciar o banco de dados. Verifique as extensoes SQLite no php-fpm.';
+  } else {
   $email = strtolower(trim((string) ($_POST['email'] ?? '')));
   $password = (string) ($_POST['password'] ?? '');
 
@@ -30,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       exit;
     }
   }
+  }
 }
 
 $pageTitle = 'ImobiHub — Login';
@@ -39,6 +49,10 @@ require_once __DIR__ . '/includes/auth_header.php';
 <div class="auth-card">
   <h1 class="auth-heading">Login do Administrador</h1>
   <p class="auth-sub">Acesse o painel de gerenciamento do site.</p>
+
+  <?php if ($bootstrapError !== null): ?>
+    <div class="auth-alert auth-alert-error">Banco de dados indisponivel no servidor. PHP-FPM precisa carregar sqlite/pdo_sqlite.</div>
+  <?php endif; ?>
 
   <?php if ($error !== ''): ?>
     <div class="auth-alert auth-alert-error"><?= htmlspecialchars($error) ?></div>

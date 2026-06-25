@@ -3,7 +3,13 @@
  * recuperar-senha.php — Solicitação de recuperação de senha
  */
 require_once __DIR__ . '/includes/auth.php';
-require_once __DIR__ . '/../backend/bootstrap.php';
+
+$bootstrapError = null;
+try {
+  require_once __DIR__ . '/../backend/bootstrap.php';
+} catch (Throwable $exception) {
+  $bootstrapError = $exception->getMessage();
+}
 
 redirectIfAuthenticated('/dashboard.php');
 
@@ -11,6 +17,9 @@ $error = '';
 $showSuccess = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if ($bootstrapError !== null) {
+    $error = 'O servidor PHP nao conseguiu iniciar o banco de dados. Verifique as extensoes SQLite no php-fpm.';
+  } else {
   $email = strtolower(trim((string) ($_POST['email'] ?? '')));
 
   if ($email === '') {
@@ -55,6 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $showSuccess = true;
     }
   }
+  }
 }
 
 $pageTitle = 'ImobiHub — Recuperar Senha';
@@ -70,6 +80,10 @@ require_once __DIR__ . '/includes/auth_header.php';
   </div>
   <h1 class="auth-heading">Recuperar senha</h1>
   <p class="auth-sub">Informe seu e-mail de administrador e enviaremos um link para você criar uma nova senha.</p>
+
+  <?php if ($bootstrapError !== null): ?>
+    <div class="auth-alert auth-alert-error">Banco de dados indisponivel no servidor. PHP-FPM precisa carregar sqlite/pdo_sqlite.</div>
+  <?php endif; ?>
 
   <?php if ($error !== ''): ?>
     <div class="auth-alert auth-alert-error"><?= htmlspecialchars($error) ?></div>
