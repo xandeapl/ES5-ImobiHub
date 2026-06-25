@@ -15,6 +15,7 @@ const PROPERTY_TYPE_LABELS = {
 };
 
 const PIN_SVG = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+const WHATSAPP_NUMBER = (document.body.dataset.whatsapp || '').replace(/\D+/g, '') || '5541999998888';
 
 function escHtml(value) {
     return String(value ?? '')
@@ -27,6 +28,64 @@ function escHtml(value) {
 function formatCurrency(value, dealType) {
     const n = 'R$\u00a0' + Number(value).toLocaleString('pt-BR', { maximumFractionDigits: 0 });
     return dealType === 'alugar' ? n + '/m\u00eas' : n;
+}
+
+function buildWhatsAppLink(item) {
+        const text = [
+                `Olá! Tenho interesse no imóvel: ${item.title}`,
+                `Local: ${item.neighborhood}, ${item.city}`,
+                `Preço: ${formatCurrency(item.price, item.deal_type)}`,
+        ].join('\n');
+
+        return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+}
+
+function openDetailsModal(item) {
+        const existing = document.getElementById('property-detail-modal');
+        if (existing) existing.remove();
+
+        const hasPhoto = item.photos && item.photos.length > 0;
+        const specs = item.property_type !== 'terreno'
+                ? `${escHtml(item.area)}m² • ${escHtml(item.bedrooms)} quartos • ${escHtml(item.bathrooms)} banheiros`
+                : `${escHtml(item.area)}m²`;
+
+        const html = `
+            <div class="detail-overlay" id="property-detail-modal" role="dialog" aria-modal="true" aria-label="Detalhes do imóvel">
+                <div class="detail-modal">
+                    <button type="button" class="detail-close" aria-label="Fechar">×</button>
+                    <div class="detail-media">
+                        ${hasPhoto
+                                ? `<img src="${escHtml(item.photos[0])}" alt="${escHtml(item.title)}">`
+                                : `<div class="card-photo-placeholder">Sem foto</div>`}
+                    </div>
+                    <div class="detail-content">
+                        <h3>${escHtml(item.title)}</h3>
+                        <p class="detail-location">${PIN_SVG} ${escHtml(item.neighborhood)}, ${escHtml(item.city)}</p>
+                        <div class="tags">
+                            <span class="tag">${escHtml(DEAL_TYPE_LABELS[item.deal_type] ?? item.deal_type)}</span>
+                            <span class="tag">${escHtml(PROPERTY_TYPE_LABELS[item.property_type] ?? item.property_type)}</span>
+                            <span class="tag">${escHtml(item.sustainability_tag)}</span>
+                        </div>
+                        <p class="detail-description">${escHtml(item.description)}</p>
+                        <div class="detail-price-row">
+                            <strong class="card-price">${escHtml(formatCurrency(item.price, item.deal_type))}</strong>
+                            <span class="card-specs">${specs}</span>
+                        </div>
+                        <a href="${buildWhatsAppLink(item)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-full">
+                            Entrar em contato no WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', html);
+        const modal = document.getElementById('property-detail-modal');
+
+        modal.querySelector('.detail-close').addEventListener('click', () => modal.remove());
+        modal.addEventListener('click', e => {
+                if (e.target === modal) modal.remove();
+        });
 }
 
 // ---------------------------------------------------------------------------
@@ -73,9 +132,11 @@ function renderCard(item) {
                 <span class="card-price">${escHtml(formatCurrency(item.price, item.deal_type))}</span>
                 ${specsHtml}
             </div>
-            <button class="btn btn-outline btn-sm btn-full" type="button" style="margin-top:10px">Ver detalhes</button>
+            <button class="btn btn-outline btn-sm btn-full" type="button" data-action="details" style="margin-top:10px">Ver detalhes</button>
         </div>
     `;
+
+    article.querySelector('[data-action="details"]').addEventListener('click', () => openDetailsModal(item));
     return article;
 }
 

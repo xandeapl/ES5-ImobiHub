@@ -13,6 +13,11 @@ try {
 
 redirectIfAuthenticated('/dashboard.php');
 
+$allowPublicRegistration = false;
+if ($bootstrapError === null) {
+  $allowPublicRegistration = !$adminRepository->hasAnyAdmin();
+}
+
 $error = trim((string) ($_GET['error'] ?? ''));
 $success = trim((string) ($_GET['success'] ?? ''));
 
@@ -99,9 +104,11 @@ require_once __DIR__ . '/includes/auth_header.php';
     </button>
   </form>
 
-  <div class="auth-link-row">
-    N&atilde;o tem conta? <a href="/cadastro.php">Criar conta de administrador</a>
-  </div>
+  <?php if ($allowPublicRegistration): ?>
+    <div class="auth-link-row">
+      N&atilde;o tem conta? <a href="/cadastro.php">Criar conta de administrador</a>
+    </div>
+  <?php endif; ?>
 </div>
 
 <p class="auth-back-link">

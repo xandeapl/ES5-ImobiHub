@@ -51,6 +51,12 @@ final class AdminRepository
         return is_array($row) ? $row : null;
     }
 
+    public function hasAnyAdmin(): bool
+    {
+        $count = (int) $this->pdo->query('SELECT COUNT(*) FROM admins')->fetchColumn();
+        return $count > 0;
+    }
+
     public function createResetToken(int $adminId, string $tokenHash, DateTimeImmutable $expiresAt): void
     {
         $now = (new DateTimeImmutable())->format(DATE_ATOM);

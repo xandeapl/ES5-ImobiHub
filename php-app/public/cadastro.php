@@ -13,6 +13,11 @@ try {
 
 redirectIfAuthenticated('/dashboard.php');
 
+if ($bootstrapError === null && $adminRepository->hasAnyAdmin()) {
+  header('Location: /login.php?error=' . urlencode('Cadastro público desabilitado.'));
+  exit;
+}
+
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

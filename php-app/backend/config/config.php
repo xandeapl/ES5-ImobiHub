@@ -52,6 +52,7 @@ return [
     'upload_web_prefix' => '/uploads',
     'app_name'         => 'ImobiHub',
     'app_url'          => $cfg('IMOBIHUB_APP_URL', 'http://localhost:8000'),
+    'contact_whatsapp' => $cfg('IMOBIHUB_CONTACT_WHATSAPP', '5541999998888'),
     'mail'             => [
         'host'      => $cfg('IMOBIHUB_SMTP_HOST', ''),
         'port'      => (int) ($cfg('IMOBIHUB_SMTP_PORT', '587') ?? '587'),

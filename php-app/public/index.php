@@ -3,6 +3,12 @@
  * index.php — Catálogo público de imóveis
  * Página principal servida pelo servidor PHP.
  */
+require_once __DIR__ . '/includes/auth.php';
+
+$config = require __DIR__ . '/../backend/config/config.php';
+$isAdmin = currentAdminId() !== null;
+$whatsAppNumber = preg_replace('/\D+/', '', (string) ($config['contact_whatsapp'] ?? '')) ?: '5541999998888';
+
 $pageTitle = 'ImobiHub — Catálogo de Imóveis';
 ?>
 <!doctype html>
@@ -13,7 +19,7 @@ $pageTitle = 'ImobiHub — Catálogo de Imóveis';
   <title><?= htmlspecialchars($pageTitle) ?></title>
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
-<body>
+<body data-whatsapp="<?= htmlspecialchars($whatsAppNumber) ?>">
 
   <header class="topbar">
     <div class="container topbar-inner">
@@ -27,10 +33,12 @@ $pageTitle = 'ImobiHub — Catálogo de Imóveis';
           <span class="brand-sub">Conectando Im&oacute;veis &amp; Neg&oacute;cios</span>
         </div>
       </a>
-      <a class="btn btn-dark btn-sm" href="/login.php">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
-        Anunciar im&oacute;vel
-      </a>
+      <?php if ($isAdmin): ?>
+        <a class="btn btn-dark btn-sm" href="/dashboard.php">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Abrir dashboard
+        </a>
+      <?php endif; ?>
     </div>
   </header>
 
