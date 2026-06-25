@@ -16,25 +16,39 @@ if command -v dnf >/dev/null 2>&1; then
   PKG_MGR="dnf"
   sudo dnf update -y
   PHP_BASE_PKGS=(nginx php-fpm php-cli rsync unzip)
-  PHP_SQLITE_PKGS=()
+  sudo dnf install -y "${PHP_BASE_PKGS[@]}"
 
-  while IFS= read -r pkg; do
-    [ -n "$pkg" ] && PHP_SQLITE_PKGS+=("$pkg")
-  done < <(dnf list available 2>/dev/null | awk '/^php([0-9.]+)?-(pdo_sqlite|sqlite3)\./ {print $1}')
+  SQLITE_INSTALLED=false
+  SQLITE_CANDIDATES=(
+    php-sqlite3
+    php-pdo_sqlite
+    php8.5-sqlite3
+    php8.4-sqlite3
+    php8.3-sqlite3
+    php8.2-sqlite3
+    php8.1-sqlite3
+  )
 
-  if [ ${#PHP_SQLITE_PKGS[@]} -eq 0 ]; then
-    while IFS= read -r pkg; do
-      [ -n "$pkg" ] && PHP_SQLITE_PKGS+=("$pkg")
-    done < <(dnf list available 2>/dev/null | awk '/^php-(pdo_sqlite|sqlite3)\./ {print $1}')
+  for pkg in "${SQLITE_CANDIDATES[@]}"; do
+    if sudo dnf install -y "$pkg" >/dev/null 2>&1; then
+      SQLITE_INSTALLED=true
+      echo "Pacote SQLite instalado: $pkg"
+      break
+    fi
+  done
+
+  if [ "$SQLITE_INSTALLED" = false ]; then
+    echo "Nao foi possivel instalar pacote SQLite por nome conhecido."
+    echo "Tentando descoberta por lista de pacotes..."
+
+    mapfile -t PHP_SQLITE_PKGS < <(dnf list available 2>/dev/null | awk '/^php([0-9.]+)?-(pdo_sqlite|sqlite3)\./ {print $1}')
+    if [ ${#PHP_SQLITE_PKGS[@]} -gt 0 ]; then
+      sudo dnf install -y "${PHP_SQLITE_PKGS[@]}" || true
+    else
+      echo "Aviso: pacote SQLite nao encontrado automaticamente."
+      echo "Verifique com: dnf search sqlite | grep -Ei '^php'"
+    fi
   fi
-
-  if [ ${#PHP_SQLITE_PKGS[@]} -eq 0 ]; then
-    echo "Nao foi possivel localizar pacotes PHP SQLite via dnf."
-    echo "Execute: dnf list available | grep -Ei 'php.*(sqlite|pdo_sqlite)'"
-    exit 1
-  fi
-
-  sudo dnf install -y "${PHP_BASE_PKGS[@]}" "${PHP_SQLITE_PKGS[@]}"
 else
   PKG_MGR="apt"
   sudo apt update
