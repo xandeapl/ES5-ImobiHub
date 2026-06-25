@@ -1,0 +1,23 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "PHP Dev Server",
+			"type": "shell",
+			"command": "${env:LOCALAPPDATA}\\Microsoft\\WinGet\\Packages\\PHP.PHP.8.3_Microsoft.Winget.Source_8wekyb3d8bbwe\\php.exe",
+			"args": [
+				"-c",
+				"${env:LOCALAPPDATA}\\Microsoft\\WinGet\\Packages\\PHP.PHP.8.3_Microsoft.Winget.Source_8wekyb3d8bbwe\\php.ini",
+				"-S",
+				"localhost:8000",
+				"-t",
+				"public"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/php-app"
+			},
+			"isBackground": true,
+			"group": "build"
+		}
+	]
+}

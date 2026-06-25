@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PHP: Escutar Xdebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9003
+        },
+        {
+            "type": "msedge",
+            "request": "launch",
+            "name": "Abrir ImobiHub (Dashboard)",
+            "url": "http://localhost:8000/dashboard.html",
+            "webRoot": "${workspaceFolder}/php-app/public",
+            "preLaunchTask": "PHP Dev Server"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Depurar Web PHP (Xdebug)",
+            "configurations": [
+                "PHP: Escutar Xdebug",
+                "Abrir ImobiHub PHP (Dashboard)"
+            ]
+        }
+    ]
+}

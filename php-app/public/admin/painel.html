@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ImobiHub &mdash; Painel Admin</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a href="/" class="brand">
+        <svg class="brand-icon" width="32" height="32" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <rect width="36" height="36" rx="8" fill="#EBF1FF"/>
+          <path d="M18 8L6 18h4v10h6v-6h4v6h6V18h4L18 8Z" fill="#1B4FBB"/>
+        </svg>
+        <span class="brand-name">ImobiHub</span>
+      </a>
+      <nav class="dash-header-nav">
+        <a href="/dashboard.html" class="btn btn-outline-muted btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+        <a href="/" class="btn btn-outline-muted btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Ver site
+        </a>
+        <a href="/login.html" class="btn btn-outline-muted btn-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sair
+        </a>
+        <button class="btn btn-primary btn-sm" id="save-btn" onclick="saveAll()">Salvar altera&ccedil;&otilde;es</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container admin-layout">
+
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <p class="admin-section-label">Personaliza&ccedil;&atilde;o</p>
+      <nav class="admin-nav">
+        <button class="admin-nav-btn active" onclick="showSection('geral',this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          Informa&ccedil;&otilde;es Gerais
+        </button>
+        <button class="admin-nav-btn" onclick="showSection('aparencia',this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Apar&ecirc;ncia
+        </button>
+        <button class="admin-nav-btn" onclick="showSection('contato',this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          Contato &amp; Redes Sociais
+        </button>
+        <button class="admin-nav-btn" onclick="showSection('seo',this)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          SEO &amp; Analytics
+        </button>
+      </nav>
+
+      <p class="admin-section-label" style="margin-top:20px">Navega&ccedil;&atilde;o</p>
+      <nav class="admin-nav">
+        <a href="/" class="admin-nav-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Cat&aacute;logo p&uacute;blico
+        </a>
+        <a href="/dashboard.html" class="admin-nav-link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          An&uacute;ncios
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main content -->
+    <main class="admin-main">
+
+      <!-- Seção: Informações Gerais -->
+      <div id="section-geral" class="admin-section">
+        <div class="admin-section-header">
+          <h2>Informa&ccedil;&otilde;es Gerais</h2>
+          <p>Personalize as informa&ccedil;&otilde;es principais da sua imobili&aacute;ria.</p>
+        </div>
+
+        <div class="admin-form-card panel">
+          <h3 class="form-card-title">Logo da imobili&aacute;ria</h3>
+          <div class="logo-preview" id="logo-preview">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#EBF1FF"/><path d="M18 8L6 18h4v10h6v-6h4v6h6V18h4L18 8Z" fill="#1B4FBB"/></svg>
+          </div>
+          <label>
+            Upload de logo
+            <div class="file-input-area">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:#64748B"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <input type="file" id="logo-input" accept="image/*" onchange="previewLogo(this)">
+            </div>
+          </label>
+        </div>
+
+        <div class="admin-form-card panel">
+          <h3 class="form-card-title">Informa&ccedil;&otilde;es do site</h3>
+          <div class="form-grid">
+            <label class="col-full">
+              Nome do site
+              <input type="text" id="site-name" value="ImobiHub" placeholder="Ex: ImobiHub">
+            </label>
+            <label class="col-full">
+              Subt&iacute;tulo / Slogan
+              <input type="text" id="site-subtitle" value="Conectando Im&oacute;veis &amp; Neg&oacute;cios" placeholder="Ex: Encontre o im&oacute;vel dos seus sonhos">
+            </label>
+            <label class="col-full">
+              Slogan da p&aacute;gina inicial
+              <input type="text" id="hero-text" value="Encontre o im&oacute;vel ideal" placeholder="Texto de destaque na p&aacute;gina inicial">
+            </label>
+          </div>
+        </div>
+
+        <div class="admin-form-card panel">
+          <h3 class="form-card-title">Textos dos bot&otilde;es</h3>
+          <div class="form-grid">
+            <label>
+              Bot&atilde;o de busca
+              <input type="text" id="btn-search" value="Buscar im&oacute;veis" placeholder="Ex: Buscar">
+            </label>
+            <label>
+              Bot&atilde;o do dashboard
+              <input type="text" id="btn-dashboard" value="Anunciar im&oacute;vel" placeholder="Ex: Cadastrar">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: Aparência -->
+      <div id="section-aparencia" class="admin-section" hidden>
+        <div class="admin-section-header">
+          <h2>Apar&ecirc;ncia</h2>
+          <p>Personalize as cores e o visual do site.</p>
+        </div>
+
+        <div class="admin-form-card panel">
+          <h3 class="form-card-title">Cores</h3>
+          <div class="form-grid">
+            <label>
+              Cor principal
+              <input type="color" id="color-brand" value="#1B4FBB" style="height:40px;padding:4px">
+            </label>
+            <label>
+              Cor escura
+              <input type="color" id="color-dark" value="#0D2B69" style="height:40px;padding:4px">
+            </label>
+            <label>
+              Cor de fundo
+              <input type="color" id="color-bg" value="#EEF2F8" style="height:40px;padding:4px">
+            </label>
+            <label>
+              Cor do texto
+              <input type="color" id="color-text" value="#0F2557" style="height:40px;padding:4px">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: Contato & Redes Sociais -->
+      <div id="section-contato" class="admin-section" hidden>
+        <div class="admin-section-header">
+          <h2>Contato &amp; Redes Sociais</h2>
+          <p>Configure as informa&ccedil;&otilde;es de contato e links de redes sociais.</p>
+        </div>
+
+        <div class="admin-form-card panel">
+          <h3 class="form-card-title">Contato</h3>
+          <div class="form-grid">
+            <label>
+              Telefone / WhatsApp
+              <input type="tel" id="contact-phone" placeholder="Ex: (41) 9 9999-9999">
+            </label>
+            <label>
+              E-mail de contato
+              <input type="email" id="contact-email" placeholder="Ex: contato@imobihub.com.br">
+            </label>
+            <label class="col-full">
+              Endere&ccedil;o
+              <input type="text" id="contact-address" placeholder="Ex: Rua das Flores, 123 &mdash; Curitiba, PR">
+            </label>
+          </div>
+        </div>
+
+        <div class="admin-form-card panel">
+          <h3 class="form-card-title">Redes Sociais</h3>
+          <div class="form-grid">
+            <label>
+              Instagram
+              <input type="url" id="social-instagram" placeholder="https://instagram.com/seuperfil">
+            </label>
+            <label>
+              Facebook
+              <input type="url" id="social-facebook" placeholder="https://facebook.com/suapagina">
+            </label>
+            <label>
+              LinkedIn
+              <input type="url" id="social-linkedin" placeholder="https://linkedin.com/company/sua-empresa">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: SEO & Analytics -->
+      <div id="section-seo" class="admin-section" hidden>
+        <div class="admin-section-header">
+          <h2>SEO &amp; Analytics</h2>
+          <p>Configure as meta-tags e integra&ccedil;&otilde;es de analytics.</p>
+        </div>
+
+        <div class="admin-form-card panel">
+          <h3 class="form-card-title">Meta-tags</h3>
+          <div class="form-grid">
+            <label class="col-full">
+              T&iacute;tulo da p&aacute;gina (SEO)
+              <input type="text" id="seo-title" value="ImobiHub &mdash; Im&oacute;veis" placeholder="Ex: ImobiHub | Im&oacute;veis de qualidade">
+            </label>
+            <label class="col-full">
+              Descri&ccedil;&atilde;o (meta description)
+              <textarea id="seo-description" placeholder="Descreva seu site em at&eacute; 160 caracteres..." rows="3"></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div class="admin-form-card panel">
+          <h3 class="form-card-title">Analytics</h3>
+          <div class="form-grid">
+            <label class="col-full">
+              Google Analytics ID
+              <input type="text" id="analytics-id" placeholder="Ex: G-XXXXXXXXXX">
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="page-footer">&copy; 2025 ImobiHub &mdash; Painel Administrativo</footer>
+
+  <script>
+    function showSection(id, btn) {
+      document.querySelectorAll('.admin-section').forEach(s => s.hidden = true);
+      document.querySelectorAll('.admin-nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('section-' + id).hidden = false;
+      btn.classList.add('active');
+    }
+
+    function previewLogo(input) {
+      if (!input.files || !input.files[0]) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const preview = document.getElementById('logo-preview');
+        preview.innerHTML = '<img src="' + e.target.result + '" alt="Logo" style="max-height:80px;border-radius:8px">';
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+
+    function saveAll() {
+      const btn = document.getElementById('save-btn');
+      btn.textContent = 'Salvando...';
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.textContent = 'Salvo!';
+        setTimeout(() => {
+          btn.textContent = 'Salvar alterações';
+          btn.disabled = false;
+        }, 1500);
+      }, 800);
+    }
+  </script>
+</body>
+</html>
