@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ImobiHub - Regras de Negocio, Mensagens, Casos de Uso e Requisitos</title>
+  <style>
+    :root {
+      --ink: #1b1f24;
+      --muted: #4b5563;
+      --line: #d1d5db;
+      --brand: #0f3d7a;
+      --bg: #f7fafc;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.35;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 34px;
+      background: var(--white);
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 30px;
+      color: var(--brand);
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    h2 {
+      margin: 26px 0 10px;
+      font-size: 20px;
+      color: var(--brand);
+      border-left: 4px solid var(--brand);
+      padding-left: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px;
+      vertical-align: top;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    th {
+      background: #edf2f7;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .small {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 0 0 10px;
+    }
+
+    .section-note {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer {
+      margin-top: 18px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { max-width: none; padding: 16px; }
+      h2 { page-break-after: avoid; }
+      table { page-break-inside: auto; }
+      tr { page-break-inside: avoid; page-break-after: auto; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1>ImobiHub - Documento Consolidado do Sistema</h1>
+    <p class="subtitle">Escopo: catalogo publico, autenticacao de administrador, dashboard de imoveis, API, upload de fotos, recuperacao de senha e operacao em servidor EC2.</p>
+    <p class="small">Versao ampliada para leitura em tela e impressao, com matriz de rastreabilidade entre requisitos, casos de uso e regras de negocio.</p>
+
+    <h2>0) Visao Geral do Sistema</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:18%">Modulo</th>
+          <th style="width:30%">O que o usuario consegue fazer</th>
+          <th style="width:26%">Quem usa</th>
+          <th style="width:26%">Regras principais</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Catalogo publico</td><td>Pesquisar, filtrar, abrir detalhes, ver fotos e chamar no WhatsApp.</td><td>Visitantes e clientes</td><td>Oculta vendidos por padrao, mostra anuncio so para admin logado, usa WhatsApp do dono quando houver.</td></tr>
+        <tr><td>Autenticacao</td><td>Criar conta de administrador inicial, entrar, sair e recuperar senha.</td><td>Administrador</td><td>E-mail unico, senha forte, senha com hash, token de recuperacao unico e expira em 30 minutos.</td></tr>
+        <tr><td>Dashboard</td><td>Cadastrar, editar, atualizar preco, alternar vendido, excluir e enviar fotos.</td><td>Administrador autenticado</td><td>Todos os mutadores exigem sessao valida.</td></tr>
+        <tr><td>API</td><td>Ler lista publica e executar operacoes de escrita protegidas para o dashboard.</td><td>Front-end e admin autenticado</td><td>GET publico, POST/PUT/PATCH/DELETE protegidos.</td></tr>
+        <tr><td>Deploy</td><td>Instalar dependencias, publicar codigo e configurar Nginx + PHP-FPM.</td><td>Suporte/DevOps</td><td>Precisa SQLite, permissao de escrita e variaveis de ambiente corretas.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>0.1) Regras de Cadastro e Senha</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:20%">Item</th>
+          <th style="width:28%">Regra aplicada</th>
+          <th style="width:20%">Onde valida</th>
+          <th style="width:32%">Observacao pratica</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Nome completo</td><td>Obrigatorio no cadastro de administrador.</td><td>cadastro.php</td><td>Se vazio, bloqueia o cadastro com mensagem de preenchimento.</td></tr>
+        <tr><td>E-mail</td><td>Obrigatorio, deve ter formato valido e nao pode se repetir.</td><td>cadastro.php + AdminRepository</td><td>O sistema nao aceita dois administradores com o mesmo e-mail.</td></tr>
+        <tr><td>Senha</td><td>Minimo de 8 caracteres, 1 letra maiuscula e 1 numero.</td><td>cadastro.php + redefinir-senha.php</td><td>O medidor visual soma caractere especial como bonus, mas nao exige isso obrigatoriamente.</td></tr>
+        <tr><td>Confirmacao de senha</td><td>Deve ser igual a senha informada.</td><td>cadastro.php + redefinir-senha.php</td><td>Se divergir, o formulario nao continua.</td></tr>
+        <tr><td>Recuperacao de senha</td><td>Somente e-mail cadastrado recebe token.</td><td>recuperar-senha.php</td><td>Token expira em 30 minutos e so pode ser usado uma vez.</td></tr>
+        <tr><td>Login</td><td>E-mail e senha devem corresponder a uma conta valida.</td><td>login.php</td><td>Se um dos campos estiver vazio ou incorreto, o sistema rejeita a entrada.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>0.2) Regras de E-mail</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:18%">Cenario</th>
+          <th style="width:30%">Regra</th>
+          <th style="width:26%">Resultado esperado</th>
+          <th style="width:26%">Mensagem ou efeito</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Cadastro de admin</td><td>Nao pode cadastrar dois administradores com o mesmo e-mail.</td><td>Cadastro rejeitado</td><td>Mensagem: Já existe uma conta para este e-mail.</td></tr>
+        <tr><td>Login</td><td>O e-mail deve existir e a senha deve bater com o hash salvo.</td><td>Acesso liberado ou negado</td><td>Mensagem: E-mail ou senha inválidos.</td></tr>
+        <tr><td>Recuperacao</td><td>Se o e-mail existir, o sistema envia link de redefinição.</td><td>Token gerado e e-mail enviado</td><td>Mensagem de sucesso não revela se o e-mail existe para o usuário final.</td></tr>
+        <tr><td>Redefinição</td><td>O token deve ser válido, ainda não usado e não expirado.</td><td>Senha trocada</td><td>Se inválido: Token inválido ou expirado.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>1) Regras de Negocio</h2>
+    <p class="section-note">Esta seção descreve o comportamento obrigatório do sistema e o que o usuário pode ou não fazer em cada perfil.</p>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:12%">ID</th>
+          <th style="width:24%">Regra</th>
+          <th style="width:30%">Descricao</th>
+          <th style="width:19%">Origem no Sistema</th>
+          <th style="width:15%">Validacao</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>RN-01</td><td>Acesso ao dashboard</td><td>Somente usuario autenticado como administrador pode acessar o dashboard e rotas de alteracao de dados.</td><td>Login + includes/auth.php + API</td><td>Bloqueio por sessao</td></tr>
+        <tr><td>RN-02</td><td>Cadastro de admin inicial</td><td>Cadastro publico de administrador e permitido apenas quando ainda nao existe administrador cadastrado.</td><td>cadastro.php + AdminRepository</td><td>hasAnyAdmin()</td></tr>
+        <tr><td>RN-03</td><td>CRUD de imoveis protegido</td><td>Criar, editar e marcar como vendido exige autenticacao de administrador.</td><td>public/api/properties.php</td><td>Verificacao de sessao</td></tr>
+        <tr><td>RN-04</td><td>Dados obrigatorios do imovel</td><td>Titulo, tipo de negocio, tipo de imovel, cidade, bairro, preco, area, quartos, banheiros e descricao sao obrigatorios.</td><td>dashboard.js + API</td><td>Validacao client/server</td></tr>
+        <tr><td>RN-05</td><td>Contato por proprietario</td><td>Cada imovel pode ter nome e WhatsApp do proprietario; no modal de detalhes o contato prioriza esse numero.</td><td>Database + PropertyRepository + catalog.js</td><td>Fallback para numero global</td></tr>
+        <tr><td>RN-06</td><td>Status de venda</td><td>Imovel pode ser marcado como vendido; o catalogo deve refletir status e impedir inconsistencias visuais.</td><td>dashboard + API + catalogo</td><td>Flag sold</td></tr>
+        <tr><td>RN-07</td><td>Upload de fotos</td><td>Fotos enviadas para pasta publica de uploads e associadas ao imovel.</td><td>public/uploads + dashboard</td><td>Caminhos validos</td></tr>
+        <tr><td>RN-08</td><td>Recuperacao de senha</td><td>Token de recuperacao deve ser unico, ter expiracao e uso unico.</td><td>admin_password_resets + Mailer</td><td>token_hash + expires_at + used_at</td></tr>
+        <tr><td>RN-09</td><td>Integridade de administrador</td><td>E-mail de administrador deve ser unico e senha deve ser armazenada com hash.</td><td>admins + AdminRepository</td><td>UNIQUE + password_hash</td></tr>
+        <tr><td>RN-10</td><td>Disponibilidade de banco</td><td>Sistema depende de SQLite ativo no PHP-FPM e permissao de escrita em data/.</td><td>bootstrap + Database</td><td>Inicializacao sem excecao</td></tr>
+        <tr><td>RN-11</td><td>Senha forte</td><td>Senha de administrador deve ter no minimo 8 caracteres, 1 letra maiuscula e 1 numero.</td><td>cadastro.php + redefinir-senha.php</td><td>Valida tanto no front quanto no back-end.</td></tr>
+        <tr><td>RN-12</td><td>WhatsApp do dono</td><td>O contato no catalogo deve priorizar o WhatsApp do proprietario do imovel.</td><td>catalog.js + PropertyRepository</td><td>Se vazio, cai para o numero global do site.</td></tr>
+        <tr><td>RN-13</td><td>Visibilidade de botao</td><td>Botao de anunciar imovel aparece apenas quando o usuario esta autenticado como administrador.</td><td>index.php</td><td>Visitante comum nao ve o CTA de cadastro.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>2) Mensagens do Sistema</h2>
+    <p class="small">Mensagens funcionais e de erro relevantes para fluxos críticos, organizadas por módulo e ação.</p>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:14%">Codigo</th>
+          <th style="width:20%">Contexto</th>
+          <th style="width:12%">Tipo</th>
+          <th style="width:34%">Mensagem</th>
+          <th style="width:20%">Acao esperada</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>MSG-001</td><td>Login</td><td>Erro</td><td>E-mail ou senha invalidos.</td><td>Revisar credenciais</td></tr>
+        <tr><td>MSG-002</td><td>Login/Bootstrap</td><td>Erro</td><td>Banco de dados indisponivel no servidor. Detalhe: ...</td><td>Verificar SQLite e permissoes</td></tr>
+        <tr><td>MSG-003</td><td>Login</td><td>Erro</td><td>Preencha e-mail e senha.</td><td>Completar campos</td></tr>
+        <tr><td>MSG-004</td><td>Cadastro admin</td><td>Erro</td><td>E-mail ja cadastrado.</td><td>Usar outro e-mail</td></tr>
+        <tr><td>MSG-005</td><td>Cadastro admin</td><td>Erro</td><td>Cadastro de administrador ja foi realizado.</td><td>Ir para login</td></tr>
+        <tr><td>MSG-006</td><td>Recuperacao</td><td>Sucesso</td><td>Se o e-mail existir, enviaremos instrucoes para redefinicao.</td><td>Checar caixa de entrada</td></tr>
+        <tr><td>MSG-007</td><td>Redefinicao</td><td>Erro</td><td>Token invalido ou expirado.</td><td>Gerar novo token</td></tr>
+        <tr><td>MSG-008</td><td>Dashboard/API</td><td>Erro</td><td>Campos obrigatorios ausentes para anuncio.</td><td>Completar formulario</td></tr>
+        <tr><td>MSG-009</td><td>Dashboard/API</td><td>Erro</td><td>WhatsApp invalido para o proprietario.</td><td>Corrigir formato</td></tr>
+        <tr><td>MSG-010</td><td>API</td><td>Erro</td><td>Nao autorizado.</td><td>Realizar login admin</td></tr>
+        <tr><td>MSG-011</td><td>Catalogo</td><td>Info</td><td>Nenhum imovel encontrado para os filtros atuais.</td><td>Limpar/ajustar filtros</td></tr>
+        <tr><td>MSG-012</td><td>Anuncio</td><td>Sucesso</td><td>Imovel salvo com sucesso.</td><td>Revisar listagem</td></tr>
+        <tr><td>MSG-013</td><td>API</td><td>Erro</td><td>Metodo nao permitido.</td><td>Usar verbo HTTP correto</td></tr>
+        <tr><td>MSG-014</td><td>API</td><td>Erro</td><td>Acao desconhecida.</td><td>Enviar action valida</td></tr>
+        <tr><td>MSG-015</td><td>API</td><td>Erro</td><td>Corpo da requisicao invalido.</td><td>Corrigir JSON enviado</td></tr>
+        <tr><td>MSG-016</td><td>API</td><td>Erro</td><td>Tipo de negocio invalido.</td><td>Usar comprar ou alugar</td></tr>
+        <tr><td>MSG-017</td><td>API</td><td>Erro</td><td>Tipo de imovel invalido.</td><td>Usar um dos tipos permitidos</td></tr>
+        <tr><td>MSG-018</td><td>API</td><td>Erro</td><td>Valores numericos invalidos.</td><td>Corrigir preco, area, quartos e banheiros</td></tr>
+        <tr><td>MSG-019</td><td>API</td><td>Erro</td><td>WhatsApp do dono invalido.</td><td>Inserir numero com DDD</td></tr>
+        <tr><td>MSG-020</td><td>Upload</td><td>Erro</td><td>Cada imagem deve ter no maximo 5 MB.</td><td>Enviar arquivo menor</td></tr>
+        <tr><td>MSG-021</td><td>Upload</td><td>Erro</td><td>Apenas arquivos de imagem sao permitidos.</td><td>Enviar JPG/PNG/WebP</td></tr>
+        <tr><td>MSG-022</td><td>Upload</td><td>Erro</td><td>Nao foi possivel salvar a imagem no servidor.</td><td>Verificar permissao de upload</td></tr>
+        <tr><td>MSG-023</td><td>SMTP</td><td>Erro</td><td>Configuração de SMTP incompleta.</td><td>Preencher variaveis de e-mail</td></tr>
+        <tr><td>MSG-024</td><td>SMTP</td><td>Erro</td><td>Falha ao conectar no SMTP: ...</td><td>Checar host, porta e rede</td></tr>
+        <tr><td>MSG-025</td><td>SMTP</td><td>Erro</td><td>Falha ao iniciar TLS no SMTP.</td><td>Revisar secure/porta/certificado</td></tr>
+        <tr><td>MSG-026</td><td>SMTP</td><td>Erro</td><td>Resposta SMTP inesperada: ...</td><td>Verificar autenticacao do servidor</td></tr>
+      </tbody>
+    </table>
+
+    <h2>2.1) Mensagens por Tela</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:20%">Tela</th>
+          <th style="width:40%">Mensagens que o usuario pode ver</th>
+          <th style="width:40%">Acoes relacionadas</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Login</td><td>Campos obrigatorios, e-mail invalido, senha incorreta, banco indisponivel, sucesso ao criar conta ou encerrar sessao.</td><td>Entrar, ir para cadastro inicial, recuperar senha, voltar ao catalogo.</td></tr>
+        <tr><td>Cadastro de admin</td><td>Nome faltando, e-mail invalido, senha fraca, senhas diferentes, e-mail duplicado, banco indisponivel.</td><td>Criar conta inicial de administrador.</td></tr>
+        <tr><td>Recuperacao de senha</td><td>E-mail vazio, e-mail invalido, falha no envio, mensagem de sucesso sem revelar cadastro.</td><td>Gerar token e enviar link por e-mail.</td></tr>
+        <tr><td>Redefinicao de senha</td><td>Token invalido, senha vazia, senhas diferentes, senha fraca, sucesso ao redefinir.</td><td>Atualizar senha com token unico.</td></tr>
+        <tr><td>Catalogo publico</td><td>Erro ao carregar imoveis, nenhum imovel encontrado, badges de vendido/disponivel.</td><td>Filtrar, abrir detalhes, conversar no WhatsApp.</td></tr>
+        <tr><td>Dashboard</td><td>Imovel salvo, atualizado, excluido, status alterado, preco atualizado, erro de autorizacao ou validacao.</td><td>Cadastrar, editar, vender, excluir, alterar preco, enviar fotos.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3) Casos de Uso</h2>
+    <p class="section-note">Aqui fica separado o que um visitante consegue fazer no catalogo e o que o administrador consegue fazer no painel.</p>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:10%">ID</th>
+          <th style="width:18%">Caso de Uso</th>
+          <th style="width:12%">Ator</th>
+          <th style="width:20%">Pre-condicao</th>
+          <th style="width:20%">Fluxo principal</th>
+          <th style="width:20%">Resultado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>UC-01</td><td>Visualizar catalogo</td><td>Visitante</td><td>Sistema online</td><td>Abre home, aplica filtros, navega cards</td><td>Lista de imoveis exibida</td></tr>
+        <tr><td>UC-02</td><td>Ver detalhes do imovel</td><td>Visitante</td><td>Imovel existente</td><td>Clica em Ver detalhes, abre modal, inicia contato</td><td>Detalhes e CTA WhatsApp</td></tr>
+        <tr><td>UC-03</td><td>Login administrador</td><td>Administrador</td><td>Conta valida</td><td>Informa e-mail e senha</td><td>Sessao autenticada</td></tr>
+        <tr><td>UC-04</td><td>Cadastrar administrador inicial</td><td>Visitante</td><td>Nenhum admin cadastrado</td><td>Preenche cadastro e envia</td><td>Conta admin criada</td></tr>
+        <tr><td>UC-05</td><td>Cadastrar imovel</td><td>Administrador</td><td>Sessao ativa</td><td>Preenche formulario com fotos e dados do proprietario</td><td>Imovel salvo e listado</td></tr>
+        <tr><td>UC-06</td><td>Editar imovel</td><td>Administrador</td><td>Imovel existente + sessao ativa</td><td>Abre edicao, altera dados, salva</td><td>Dados atualizados</td></tr>
+        <tr><td>UC-07</td><td>Marcar como vendido</td><td>Administrador</td><td>Imovel existente + sessao ativa</td><td>Seleciona acao de venda</td><td>Status vendido aplicado</td></tr>
+        <tr><td>UC-08</td><td>Recuperar senha</td><td>Administrador</td><td>E-mail cadastrado</td><td>Solicita recuperacao, recebe link, redefine senha</td><td>Senha alterada</td></tr>
+        <tr><td>UC-09</td><td>Listar imoveis via API</td><td>Sistema Frontend</td><td>API disponivel</td><td>Front faz GET para propriedades</td><td>JSON com lista de imoveis</td></tr>
+        <tr><td>UC-10</td><td>Publicar em EC2</td><td>DevOps/Admin tecnico</td><td>Servidor com Nginx/PHP-FPM</td><td>Executa script de deploy e ajusta .env</td><td>Sistema operando em producao</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3.1) O que o visitante consegue fazer</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">Ação</th>
+          <th style="width:40%">Como funciona</th>
+          <th style="width:35%">Restrição</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Visualizar catálogo</td><td>Ver cards com foto, título, localização, preço, área, quartos e tag.</td><td>Não altera dados.</td></tr>
+        <tr><td>Filtrar imóveis</td><td>Filtrar por tipo de negócio, tipo de imóvel, busca textual, ordenação e exibir vendidos.</td><td>Filtro só muda a listagem.</td></tr>
+        <tr><td>Ver detalhes</td><td>Abre modal com foto, descrição, preço, proprietário e botão de WhatsApp.</td><td>Não exige login.</td></tr>
+        <tr><td>Falar no WhatsApp</td><td>Abre conversa com o número do proprietário do imóvel, ou número padrão do site.</td><td>Depende de número válido.</td></tr>
+        <tr><td>Ver vendidos</td><td>Imóveis vendidos ficam ocultos por padrão e podem ser mostrados pelo filtro.</td><td>Somente visualização.</td></tr>
+        <tr><td>Ver botões administrativos</td><td>Visitante não vê anunciar nem dashboard.</td><td>Requer sessão de admin.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>3.2) O que o administrador consegue fazer</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">Ação</th>
+          <th style="width:40%">Como funciona</th>
+          <th style="width:35%">Regra de negocio associada</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Criar conta inicial</td><td>Somente enquanto não existir administrador no sistema.</td><td>Cadastro público desabilitado após o primeiro admin.</td></tr>
+        <tr><td>Entrar no sistema</td><td>Usa e-mail e senha válidos para abrir sessão.</td><td>Sem sessão não entra no dashboard.</td></tr>
+        <tr><td>Cadastrar imóvel</td><td>Preenche todos os campos, adiciona fotos e grava o anúncio.</td><td>Campos obrigatórios e WhatsApp válido.</td></tr>
+        <tr><td>Editar imóvel</td><td>Altera dados do anúncio já existente.</td><td>CRUD protegido por autenticação.</td></tr>
+        <tr><td>Atualizar preço</td><td>Atualiza o preço sem reescrever todos os outros campos.</td><td>Preço deve ser maior que zero.</td></tr>
+        <tr><td>Marcar vendido/disponível</td><td>Alterna a visibilidade comercial do anúncio.</td><td>Lista pública oculta vendidos por padrão.</td></tr>
+        <tr><td>Excluir imóvel</td><td>Remove o anúncio permanentemente.</td><td>Ação protegida com confirmação.</td></tr>
+        <tr><td>Recuperar senha</td><td>Recebe link por e-mail com validade de 30 minutos.</td><td>Token único e uso único.</td></tr>
+      </tbody>
+    </table>
+
+    <h2>4) Requisitos Funcionais</h2>
+    <p class="section-note">Esses requisitos resumem o que o sistema faz na prática para visitantes, administradores e integrações.</p>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:12%">ID</th>
+          <th style="width:33%">Requisito</th>
+          <th style="width:20%">Prioridade</th>
+          <th style="width:20%">Modulo</th>
+          <th style="width:15%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>RF-01</td><td>Permitir listagem publica de imoveis com filtros.</td><td>Alta</td><td>Catalogo publico</td><td>Implementado</td></tr>
+        <tr><td>RF-02</td><td>Exibir modal de detalhes ao clicar em Ver detalhes.</td><td>Alta</td><td>Catalogo JS</td><td>Implementado</td></tr>
+        <tr><td>RF-03</td><td>Exibir contato WhatsApp especifico por imovel.</td><td>Alta</td><td>Catalogo + repositorio</td><td>Implementado</td></tr>
+        <tr><td>RF-04</td><td>Permitir login de administrador com sessao.</td><td>Alta</td><td>Autenticacao</td><td>Implementado</td></tr>
+        <tr><td>RF-05</td><td>Permitir cadastro de primeiro administrador.</td><td>Alta</td><td>Autenticacao</td><td>Implementado</td></tr>
+        <tr><td>RF-06</td><td>Permitir recuperacao e redefinicao de senha por e-mail.</td><td>Alta</td><td>Auth + Mailer</td><td>Implementado</td></tr>
+        <tr><td>RF-07</td><td>Permitir CRUD completo de imoveis no dashboard.</td><td>Alta</td><td>Dashboard + API</td><td>Implementado</td></tr>
+        <tr><td>RF-08</td><td>Permitir upload de fotos para cada imovel.</td><td>Media</td><td>Dashboard</td><td>Implementado</td></tr>
+        <tr><td>RF-09</td><td>Permitir marcar imovel como vendido.</td><td>Alta</td><td>Dashboard + API</td><td>Implementado</td></tr>
+        <tr><td>RF-10</td><td>Restringir acoes de alteracao para usuarios autenticados.</td><td>Alta</td><td>API + includes auth</td><td>Implementado</td></tr>
+        <tr><td>RF-11</td><td>Exibir botao de anunciar apenas para administrador.</td><td>Media</td><td>Home publica</td><td>Implementado</td></tr>
+        <tr><td>RF-12</td><td>Gerar dados iniciais de imoveis se base vazia.</td><td>Baixa</td><td>PropertyRepository</td><td>Implementado</td></tr>
+        <tr><td>RF-13</td><td>Permitir abrir modal de detalhes a partir do card publico.</td><td>Alta</td><td>Catalogo JS</td><td>Implementado</td></tr>
+        <tr><td>RF-14</td><td>Permitir contato direto com WhatsApp do dono do imovel.</td><td>Alta</td><td>Catalogo JS</td><td>Implementado</td></tr>
+        <tr><td>RF-15</td><td>Permitir cadastro somente do primeiro administrador via tela publica.</td><td>Alta</td><td>cadastro.php</td><td>Implementado</td></tr>
+        <tr><td>RF-16</td><td>Permitir recuperar senha com envio de link por SMTP.</td><td>Alta</td><td>recuperar-senha.php + Mailer</td><td>Implementado</td></tr>
+        <tr><td>RF-17</td><td>Permitir redefinir senha com token valido.</td><td>Alta</td><td>redefinir-senha.php</td><td>Implementado</td></tr>
+        <tr><td>RF-18</td><td>Permitir leitura publica da listagem sem login.</td><td>Alta</td><td>API GET</td><td>Implementado</td></tr>
+      </tbody>
+    </table>
+
+    <h2>5) Requisitos Nao Funcionais</h2>
+    <p class="section-note">Requisitos de qualidade, arquitetura, seguranca e operacao.</p>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:12%">ID</th>
+          <th style="width:33%">Requisito</th>
+          <th style="width:20%">Categoria</th>
+          <th style="width:20%">Criterio de aceitacao</th>
+          <th style="width:15%">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>RNF-01</td><td>Sistema deve rodar com PHP 8+ e SQLite sem dependencia de banco externo.</td><td>Portabilidade</td><td>Subir local e EC2 com script de deploy</td><td>Atendido</td></tr>
+        <tr><td>RNF-02</td><td>API de escrita deve exigir autenticacao de sessao.</td><td>Seguranca</td><td>Respostas 401 para nao autenticado</td><td>Atendido</td></tr>
+        <tr><td>RNF-03</td><td>Senhas de administrador devem ser armazenadas com hash seguro.</td><td>Seguranca</td><td>Uso de password_hash/password_verify</td><td>Atendido</td></tr>
+        <tr><td>RNF-04</td><td>Recuperacao de senha deve usar token unico, expiravel e uso unico.</td><td>Seguranca</td><td>Token hash + expires_at + used_at</td><td>Atendido</td></tr>
+        <tr><td>RNF-05</td><td>Interface deve funcionar em desktop e mobile.</td><td>Usabilidade</td><td>Layouts responsivos no CSS</td><td>Atendido</td></tr>
+        <tr><td>RNF-06</td><td>Sistema deve apresentar mensagens claras para erros criticos.</td><td>Confiabilidade</td><td>Erros de bootstrap/autenticacao legiveis</td><td>Atendido</td></tr>
+        <tr><td>RNF-07</td><td>Deploy deve ser reproduzivel por script.</td><td>Operabilidade</td><td>setup-ec2.sh executa ponta a ponta</td><td>Atendido</td></tr>
+        <tr><td>RNF-08</td><td>Servico web deve operar em Nginx + PHP-FPM com restart seguro.</td><td>Disponibilidade</td><td>nginx -t e restart sem erro</td><td>Atendido</td></tr>
+        <tr><td>RNF-09</td><td>Arquivos de upload e banco devem ter permissoes corretas para web user.</td><td>Confiabilidade</td><td>Sem erro de escrita no runtime</td><td>Atendido</td></tr>
+        <tr><td>RNF-10</td><td>Assets criticos do frontend devem poder ser invalidados para evitar cache obsoleto.</td><td>Manutenibilidade</td><td>Versionamento de assets na home</td><td>Atendido</td></tr>
+        <tr><td>RNF-11</td><td>Mensagens de erro devem ser claras para o usuario final.</td><td>Usabilidade</td><td>Erros orientam a acao a tomar</td><td>Atendido</td></tr>
+        <tr><td>RNF-12</td><td>Documentacao de operacao deve refletir o comportamento real do sistema.</td><td>Manutenibilidade</td><td>Relatorio e roteiro coerentes com o codigo</td><td>Atendido</td></tr>
+      </tbody>
+    </table>
+
+    <h2>6) Matriz de Rastreabilidade</h2>
+    <p class="small">Relaciona requisitos funcionais, casos de uso e regras de negocio para facilitar validacao do escopo.</p>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:12%">Requisito</th>
+          <th style="width:22%">Caso de Uso</th>
+          <th style="width:22%">Regra de Negocio</th>
+          <th style="width:24%">Modulo/Funcionalidade</th>
+          <th style="width:20%">Observacao</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>RF-01</td><td>UC-01</td><td>RN-10</td><td>Catalogo publico</td><td>Listagem e filtros do portal</td></tr>
+        <tr><td>RF-02</td><td>UC-02</td><td>RN-05</td><td>Modal de detalhes</td><td>Mostra detalhes e CTA de contato</td></tr>
+        <tr><td>RF-03</td><td>UC-02</td><td>RN-05</td><td>Contato WhatsApp</td><td>Usa numero do proprietario quando existir</td></tr>
+        <tr><td>RF-04</td><td>UC-03</td><td>RN-01</td><td>Autenticacao</td><td>Acesso ao dashboard e rotas protegidas</td></tr>
+        <tr><td>RF-05</td><td>UC-04</td><td>RN-02</td><td>Cadastro de admin</td><td>Somente primeiro cadastro e permitido</td></tr>
+        <tr><td>RF-06</td><td>UC-08</td><td>RN-08</td><td>Recuperacao de senha</td><td>Token de uso unico por e-mail</td></tr>
+        <tr><td>RF-07</td><td>UC-05, UC-06, UC-07</td><td>RN-03, RN-04, RN-06</td><td>Dashboard de imoveis</td><td>CRUD, edicao e status de venda</td></tr>
+        <tr><td>RF-08</td><td>UC-05</td><td>RN-07</td><td>Upload de fotos</td><td>Armazenamento em uploads</td></tr>
+        <tr><td>RF-09</td><td>UC-09</td><td>RN-03</td><td>API de propriedades</td><td>Endpoints protegidos para escrita</td></tr>
+        <tr><td>RF-10</td><td>UC-10</td><td>RN-10</td><td>Deploy EC2</td><td>Preparacao do ambiente e permissao de dados</td></tr>
+        <tr><td>RF-11</td><td>UC-01</td><td>RN-01</td><td>Home publica</td><td>Botao de anunciar visivel somente para admin</td></tr>
+        <tr><td>RF-12</td><td>UC-01</td><td>RN-09</td><td>Seed inicial</td><td>Dados iniciais apenas quando base vazia</td></tr>
+        <tr><td>RF-13</td><td>UC-02</td><td>RN-05, RN-12</td><td>Modal de detalhes</td><td>Abre com foto, preco, dono e WhatsApp</td></tr>
+        <tr><td>RF-14</td><td>UC-02</td><td>RN-12</td><td>Contato WhatsApp</td><td>Prioriza numero do dono do anuncio</td></tr>
+        <tr><td>RF-15</td><td>UC-04</td><td>RN-02, RN-11</td><td>Cadastro inicial</td><td>E-mail unico e senha forte</td></tr>
+        <tr><td>RF-16</td><td>UC-08</td><td>RN-08</td><td>Recuperacao de senha</td><td>Token por e-mail com validade limitada</td></tr>
+        <tr><td>RF-17</td><td>UC-08</td><td>RN-08, RN-11</td><td>Redefinicao de senha</td><td>Nova senha deve seguir regra de complexidade</td></tr>
+        <tr><td>RF-18</td><td>UC-01</td><td>RN-10</td><td>API publica</td><td>Listagem funciona mesmo sem login</td></tr>
+      </tbody>
+    </table>
+
+    <h2>7) Resumo Operacional do que cada perfil faz</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%">Perfil</th>
+          <th style="width:35%">Pode fazer</th>
+          <th style="width:40%">Nao pode fazer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Visitante</td><td>Ver catálogo, filtrar, abrir detalhes, usar WhatsApp, ver vendidos quando habilitado.</td><td>Criar, editar, excluir ou cadastrar imóveis; acessar dashboard; modificar dados.</td></tr>
+        <tr><td>Administrador autenticado</td><td>Usar dashboard, cadastrar e editar anúncios, atualizar preço, vender, excluir, recuperar senha, administrar fotos.</td><td>Ignorar validações de e-mail, senha, WhatsApp e autorização.</td></tr>
+        <tr><td>Administrador não autenticado</td><td>Ver tela de login, cadastro inicial (se ainda não existir admin), recuperação de senha.</td><td>Abrir dashboard e mutações na API.</td></tr>
+        <tr><td>Sistema/integração</td><td>Ler anúncios, responder em JSON, enviar e-mail SMTP, salvar em SQLite.</td><td>Executar mutações sem sessão válida ou sem dados corretos.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      Documento gerado automaticamente para o projeto ImobiHub em 2026-06-25.
+    </div>
+  </main>
+</body>
+</html>

@@ -56,7 +56,10 @@ require_once __DIR__ . '/includes/auth_header.php';
   <p class="auth-sub">Acesse o painel de gerenciamento do site.</p>
 
   <?php if ($bootstrapError !== null): ?>
-    <div class="auth-alert auth-alert-error">Banco de dados indisponivel no servidor. PHP-FPM precisa carregar sqlite/pdo_sqlite.</div>
+    <div class="auth-alert auth-alert-error">
+      Banco de dados indisponivel no servidor.
+      Detalhe: <?= htmlspecialchars($bootstrapError) ?>
+    </div>
   <?php endif; ?>
 
   <?php if ($error !== ''): ?>
