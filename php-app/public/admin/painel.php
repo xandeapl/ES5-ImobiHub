@@ -85,8 +85,8 @@ require_once __DIR__ . '/../includes/header.php';
         <h3 class="form-card-title">Logo da imobili&aacute;ria</h3>
         <div class="logo-preview" id="logo-preview">
           <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-            <rect width="36" height="36" rx="8" fill="#EBF1FF"/>
-            <path d="M18 8L6 18h4v10h6v-6h4v6h6V18h4L18 8Z" fill="#1B4FBB"/>
+            <rect width="36" height="36" rx="8" fill="var(--logo-bg, #EBF1FF)"/>
+            <path d="M18 8L6 18h4v10h6v-6h4v6h6V18h4L18 8Z" fill="var(--brand, #1B4FBB)"/>
           </svg>
         </div>
         <label>
@@ -151,6 +151,9 @@ require_once __DIR__ . '/../includes/header.php';
           <label>Cor de fundo      <input type="color" id="color-bg"    value="#EEF2F8" style="height:40px;padding:4px"></label>
           <label>Cor do texto      <input type="color" id="color-text"  value="#0F2557" style="height:40px;padding:4px"></label>
         </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn btn-outline-muted btn-sm" onclick="resetThemeDefaults()">Voltar cor padr&atilde;o</button>
+        </div>
       </div>
     </div>
 
@@ -208,6 +211,12 @@ require_once __DIR__ . '/../includes/header.php';
 
 <script>
   const THEME_STORAGE_KEY = 'imobihub_theme_v1';
+  const DEFAULT_THEME = {
+    brand: '#1B4FBB',
+    dark: '#0D2B69',
+    bg: '#EEF2F8',
+    text: '#0F2557'
+  };
 
   function getThemeInputs() {
     return {
@@ -244,16 +253,18 @@ require_once __DIR__ . '/../includes/header.php';
 
   function applyTheme(theme) {
     const root = document.documentElement;
-    const brand = safeHex(theme.brand, '#1B4FBB');
-    const dark = safeHex(theme.dark, '#0D2B69');
-    const bg = safeHex(theme.bg, '#EEF2F8');
-    const text = safeHex(theme.text, '#0F2557');
+    const brand = safeHex(theme.brand, DEFAULT_THEME.brand);
+    const dark = safeHex(theme.dark, DEFAULT_THEME.dark);
+    const bg = safeHex(theme.bg, DEFAULT_THEME.bg);
+    const text = safeHex(theme.text, DEFAULT_THEME.text);
+    const logoBg = shiftHex(brand, 198);
 
     root.style.setProperty('--brand', brand);
     root.style.setProperty('--brand-dark', dark);
     root.style.setProperty('--brand-hover', shiftHex(brand, -18));
     root.style.setProperty('--bg', bg);
     root.style.setProperty('--text', text);
+    root.style.setProperty('--logo-bg', logoBg);
   }
 
   function loadTheme() {
@@ -279,22 +290,32 @@ require_once __DIR__ . '/../includes/header.php';
 
   function writeThemeToInputs(theme) {
     const inputs = getThemeInputs();
-    inputs.brand.value = safeHex(theme.brand, '#1B4FBB');
-    inputs.dark.value = safeHex(theme.dark, '#0D2B69');
-    inputs.bg.value = safeHex(theme.bg, '#EEF2F8');
-    inputs.text.value = safeHex(theme.text, '#0F2557');
+    inputs.brand.value = safeHex(theme.brand, DEFAULT_THEME.brand);
+    inputs.dark.value = safeHex(theme.dark, DEFAULT_THEME.dark);
+    inputs.bg.value = safeHex(theme.bg, DEFAULT_THEME.bg);
+    inputs.text.value = safeHex(theme.text, DEFAULT_THEME.text);
   }
 
   function bootTheme() {
     const savedTheme = loadTheme();
-    if (savedTheme) {
-      writeThemeToInputs(savedTheme);
-      applyTheme(savedTheme);
-    }
+    const initialTheme = savedTheme || DEFAULT_THEME;
+    writeThemeToInputs(initialTheme);
+    applyTheme(initialTheme);
 
     Object.values(getThemeInputs()).forEach((input) => {
       input.addEventListener('input', () => applyTheme(readThemeFromInputs()));
     });
+  }
+
+  function resetThemeDefaults() {
+    localStorage.removeItem(THEME_STORAGE_KEY);
+    writeThemeToInputs(DEFAULT_THEME);
+    applyTheme(DEFAULT_THEME);
+
+    const btn = document.getElementById('save-btn');
+    if (!btn) return;
+    btn.textContent = 'Tema padr\u00e3o aplicado';
+    setTimeout(() => { btn.textContent = 'Salvar altera\u00e7\u00f5es'; }, 1400);
   }
 
   function showSection(id, btn) {

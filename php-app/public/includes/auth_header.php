@@ -45,12 +45,14 @@ $extraHead = $extraHead ?? '';
         };
         var rgb = toRgb(brand);
         var hover = rgbToHex(clamp(rgb.r - 18), clamp(rgb.g - 18), clamp(rgb.b - 18));
+        var logoBg = rgbToHex(clamp(rgb.r + 198), clamp(rgb.g + 198), clamp(rgb.b + 198));
 
         root.style.setProperty('--brand', brand);
         root.style.setProperty('--brand-dark', dark);
         root.style.setProperty('--brand-hover', hover);
         root.style.setProperty('--bg', bg);
         root.style.setProperty('--text', text);
+        root.style.setProperty('--logo-bg', logoBg);
       } catch (e) {}
     })();
   </script>
@@ -61,8 +63,8 @@ $extraHead = $extraHead ?? '';
 
 <a href="/" class="auth-logo">
   <svg width="40" height="40" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-    <rect width="36" height="36" rx="8" fill="#EBF1FF"/>
-    <path d="M18 8L6 18h4v10h6v-6h4v6h6V18h4L18 8Z" fill="#1B4FBB"/>
+    <rect width="36" height="36" rx="8" fill="var(--logo-bg, #EBF1FF)"/>
+    <path d="M18 8L6 18h4v10h6v-6h4v6h6V18h4L18 8Z" fill="var(--brand, #1B4FBB)"/>
   </svg>
   <div class="brand-text">
     <span class="brand-name">ImobiHub</span>
