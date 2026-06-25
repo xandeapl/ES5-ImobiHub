@@ -8,6 +8,8 @@ require_once __DIR__ . '/includes/auth.php';
 $config = require __DIR__ . '/../backend/config/config.php';
 $isAdmin = currentAdminId() !== null;
 $whatsAppNumber = preg_replace('/\D+/', '', (string) ($config['contact_whatsapp'] ?? '')) ?: '5541999998888';
+$cssVersion = (string) (filemtime(__DIR__ . '/assets/styles.css') ?: time());
+$catalogVersion = (string) (filemtime(__DIR__ . '/assets/js/catalog.js') ?: time());
 
 $pageTitle = 'ImobiHub — Catálogo de Imóveis';
 ?>
@@ -17,7 +19,7 @@ $pageTitle = 'ImobiHub — Catálogo de Imóveis';
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= htmlspecialchars($pageTitle) ?></title>
-  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="stylesheet" href="/assets/styles.css?v=<?= htmlspecialchars($cssVersion) ?>">
 </head>
 <body data-whatsapp="<?= htmlspecialchars($whatsAppNumber) ?>">
 
@@ -123,6 +125,6 @@ $pageTitle = 'ImobiHub — Catálogo de Imóveis';
     &copy; <?= date('Y') ?> ImobiHub &mdash; Conectando Im&oacute;veis &amp; Neg&oacute;cios
   </footer>
 
-  <script type="module" src="/assets/js/catalog.js"></script>
+  <script type="module" src="/assets/js/catalog.js?v=<?= htmlspecialchars($catalogVersion) ?>"></script>
 </body>
 </html>
