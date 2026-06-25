@@ -31,13 +31,15 @@ function formatCurrency(value, dealType) {
 }
 
 function buildWhatsAppLink(item) {
+    const ownerNumber = String(item.owner_whatsapp || '').replace(/\D+/g, '');
+    const targetNumber = ownerNumber || WHATSAPP_NUMBER;
         const text = [
                 `Olá! Tenho interesse no imóvel: ${item.title}`,
                 `Local: ${item.neighborhood}, ${item.city}`,
                 `Preço: ${formatCurrency(item.price, item.deal_type)}`,
         ].join('\n');
 
-        return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+    return `https://wa.me/${targetNumber}?text=${encodeURIComponent(text)}`;
 }
 
 function openDetailsModal(item) {
@@ -71,6 +73,7 @@ function openDetailsModal(item) {
                             <strong class="card-price">${escHtml(formatCurrency(item.price, item.deal_type))}</strong>
                             <span class="card-specs">${specs}</span>
                         </div>
+                        <p class="detail-owner">Dono: ${escHtml(item.owner_name || 'Imobiliária')}</p>
                         <a href="${buildWhatsAppLink(item)}" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-full">
                             Entrar em contato no WhatsApp
                         </a>

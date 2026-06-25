@@ -505,6 +505,11 @@ textarea { min-height: 110px; resize: vertical; }
   padding-top: 10px;
 }
 
+.detail-owner {
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
 /* ── Empty State ────────────────────────────────────────────── */
 .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
 .empty-state h3 { font-size: 1rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }

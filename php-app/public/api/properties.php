@@ -133,6 +133,8 @@ function handleUpdate(PropertyRepository $repo, int $id): never
         'area'             => trim((string) ($body['area'] ?? '')),
         'bedrooms'         => trim((string) ($body['bedrooms'] ?? '')),
         'bathrooms'        => trim((string) ($body['bathrooms'] ?? '')),
+        'owner_name'       => trim((string) ($body['owner_name'] ?? '')),
+        'owner_whatsapp'   => trim((string) ($body['owner_whatsapp'] ?? '')),
         'description'      => trim((string) ($body['description'] ?? '')),
         'sustainability_tag' => trim((string) ($body['sustainability_tag'] ?? '')),
     ];
@@ -210,6 +212,8 @@ function collectPostPayload(bool $forceComprar = false): array
         'area'             => $str('area'),
         'bedrooms'         => $str('bedrooms'),
         'bathrooms'        => $str('bathrooms'),
+        'owner_name'       => $str('owner_name'),
+        'owner_whatsapp'   => $str('owner_whatsapp'),
         'description'      => $str('description'),
         'sustainability_tag' => $str('sustainability_tag'),
     ];
@@ -220,7 +224,7 @@ function validatePayload(array $data): array
     $errors                 = [];
     $allowed_deal_types     = ['comprar', 'alugar'];
     $allowed_property_types = ['apartamento', 'casa', 'imovel-comercial', 'terreno', 'studio', 'cobertura'];
-    $required_text_fields   = ['title', 'city', 'neighborhood', 'description', 'sustainability_tag'];
+    $required_text_fields   = ['title', 'city', 'neighborhood', 'owner_name', 'owner_whatsapp', 'description', 'sustainability_tag'];
 
     foreach ($required_text_fields as $field) {
         if ($data[$field] === '') {
@@ -240,6 +244,11 @@ function validatePayload(array $data): array
     if ((float) $data['price'] <= 0 || (int) $data['area'] <= 0
         || (int) $data['bedrooms'] < 0 || (int) $data['bathrooms'] < 0) {
         $errors[] = 'Valores numericos invalidos.';
+    }
+
+    $digits = preg_replace('/\D+/', '', (string) ($data['owner_whatsapp'] ?? ''));
+    if (strlen((string) $digits) < 10) {
+        $errors[] = 'WhatsApp do dono invalido.';
     }
 
     return $errors;

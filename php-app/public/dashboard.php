@@ -132,6 +132,16 @@ require_once __DIR__ . '/includes/header.php';
         </label>
 
         <label>
+          Nome do dono
+          <input name="owner_name" placeholder="Ex: Jo&atilde;o da Silva" required>
+        </label>
+
+        <label>
+          WhatsApp do dono
+          <input name="owner_whatsapp" type="tel" placeholder="Ex: (41) 99999-9999" required>
+        </label>
+
+        <label>
           Tag de sustentabilidade
           <input name="sustainability_tag" placeholder="Ex: Energia solar, &Aacute;rea verde" required>
         </label>
@@ -233,6 +243,8 @@ require_once __DIR__ . '/includes/header.php';
             <label>&Aacute;rea (m&sup2;)<input name="area" type="number" min="1" required></label>
             <label>Quartos<input name="bedrooms" type="number" min="0" required></label>
             <label>Banheiros<input name="bathrooms" type="number" min="0" required></label>
+            <label>Nome do dono<input name="owner_name" required></label>
+            <label>WhatsApp do dono<input name="owner_whatsapp" type="tel" required></label>
             <label>Tag de sustentabilidade<input name="sustainability_tag" required></label>
             <label class="col-full">Descri&ccedil;&atilde;o<textarea name="description" required></textarea></label>
             <div class="col-full" style="display:flex;gap:8px">

@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS properties (
     area INTEGER NOT NULL,
     bedrooms INTEGER NOT NULL,
     bathrooms INTEGER NOT NULL,
+    owner_name TEXT NOT NULL DEFAULT '',
+    owner_whatsapp TEXT NOT NULL DEFAULT '',
     description TEXT NOT NULL,
     sustainability_tag TEXT NOT NULL,
     photos_json TEXT NOT NULL DEFAULT '[]',
@@ -73,5 +75,22 @@ ON admin_password_resets(token_hash);
 SQL;
 
         $this->pdo->exec($sql);
+
+        $this->ensurePropertyColumn('owner_name', "TEXT NOT NULL DEFAULT ''");
+        $this->ensurePropertyColumn('owner_whatsapp', "TEXT NOT NULL DEFAULT ''");
+    }
+
+    private function ensurePropertyColumn(string $column, string $sqlType): void
+    {
+        $stmt = $this->pdo->query("PRAGMA table_info(properties)");
+        $columns = $stmt->fetchAll();
+
+        foreach ($columns as $item) {
+            if (($item['name'] ?? null) === $column) {
+                return;
+            }
+        }
+
+        $this->pdo->exec("ALTER TABLE properties ADD COLUMN {$column} {$sqlType}");
     }
 }

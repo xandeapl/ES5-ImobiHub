@@ -70,9 +70,9 @@ final class PropertyRepository
     {
         $sql = <<<'SQL'
 INSERT INTO properties
-    (slug, title, deal_type, property_type, city, neighborhood, price, area, bedrooms, bathrooms, description, sustainability_tag, photos_json, sold, created_at)
+    (slug, title, deal_type, property_type, city, neighborhood, price, area, bedrooms, bathrooms, owner_name, owner_whatsapp, description, sustainability_tag, photos_json, sold, created_at)
 VALUES
-    (:slug, :title, :deal_type, :property_type, :city, :neighborhood, :price, :area, :bedrooms, :bathrooms, :description, :sustainability_tag, :photos_json, 0, :created_at)
+    (:slug, :title, :deal_type, :property_type, :city, :neighborhood, :price, :area, :bedrooms, :bathrooms, :owner_name, :owner_whatsapp, :description, :sustainability_tag, :photos_json, 0, :created_at)
 SQL;
 
         $stmt = $this->pdo->prepare($sql);
@@ -87,6 +87,8 @@ SQL;
             ':area'             => (int) $data['area'],
             ':bedrooms'         => (int) $data['bedrooms'],
             ':bathrooms'        => (int) $data['bathrooms'],
+            ':owner_name'       => $data['owner_name'],
+            ':owner_whatsapp'   => $data['owner_whatsapp'],
             ':description'      => $data['description'],
             ':sustainability_tag' => $data['sustainability_tag'],
             ':photos_json'      => json_encode($photos, JSON_THROW_ON_ERROR),
@@ -119,6 +121,8 @@ SET title              = :title,
     area               = :area,
     bedrooms           = :bedrooms,
     bathrooms          = :bathrooms,
+    owner_name         = :owner_name,
+    owner_whatsapp     = :owner_whatsapp,
     description        = :description,
     sustainability_tag = :sustainability_tag
 WHERE id = :id
@@ -136,6 +140,8 @@ SQL;
             ':area'             => (int) $data['area'],
             ':bedrooms'         => (int) $data['bedrooms'],
             ':bathrooms'        => (int) $data['bathrooms'],
+            ':owner_name'       => $data['owner_name'],
+            ':owner_whatsapp'   => $data['owner_whatsapp'],
             ':description'      => $data['description'],
             ':sustainability_tag' => $data['sustainability_tag'],
         ]);
@@ -165,6 +171,8 @@ SQL;
                 'area'             => 62,
                 'bedrooms'         => 2,
                 'bathrooms'        => 2,
+                'owner_name'       => 'Ana Martins',
+                'owner_whatsapp'   => '(41) 99999-1111',
                 'description'      => 'Apartamento com ventilacao cruzada e acesso facil a transporte publico.',
                 'sustainability_tag' => 'Mobilidade urbana',
                 'photos'           => ['https://images.unsplash.com/photo-1494526585095-c41746248156?w=1200&q=80&auto=format&fit=crop'],
@@ -179,6 +187,8 @@ SQL;
                 'area'             => 145,
                 'bedrooms'         => 3,
                 'bathrooms'        => 2,
+                'owner_name'       => 'Carlos Souza',
+                'owner_whatsapp'   => '(41) 99999-2222',
                 'description'      => 'Imovel com area verde, reuso de agua e espaco para horta.',
                 'sustainability_tag' => 'Infraestrutura verde',
                 'photos'           => ['https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200&q=80&auto=format&fit=crop'],
@@ -199,6 +209,8 @@ SQL;
             $row['area']     = (int) $row['area'];
             $row['bedrooms'] = (int) $row['bedrooms'];
             $row['bathrooms'] = (int) $row['bathrooms'];
+            $row['owner_name'] = (string) ($row['owner_name'] ?? '');
+            $row['owner_whatsapp'] = (string) ($row['owner_whatsapp'] ?? '');
             $row['photos']   = json_decode((string) $row['photos_json'], true) ?: [];
 
             return $row;

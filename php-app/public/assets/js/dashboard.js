@@ -113,7 +113,7 @@ function buildPropertyItem(item) {
 
     // Edit form — pre-fill with current values
     const editForm = article.querySelector('[data-action="edit"]');
-    const fields = ['title', 'deal_type', 'property_type', 'city', 'neighborhood', 'price', 'area', 'bedrooms', 'bathrooms', 'sustainability_tag', 'description'];
+    const fields = ['title', 'deal_type', 'property_type', 'city', 'neighborhood', 'price', 'area', 'bedrooms', 'bathrooms', 'owner_name', 'owner_whatsapp', 'sustainability_tag', 'description'];
     for (const field of fields) {
         const el = editForm.elements[field];
         if (el) el.value = field === 'price' ? Math.round(item.price) : (item[field] ?? '');
